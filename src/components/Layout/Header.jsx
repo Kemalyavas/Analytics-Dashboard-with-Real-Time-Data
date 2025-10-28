@@ -1,7 +1,36 @@
-﻿import { Bell, Search } from 'lucide-react';
+﻿import { Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import ThemeToggle from '../ThemeToggle';
+import NotificationPanel from '../NotificationPanel';
 
 const Header = () => {
+  const [userSettings, setUserSettings] = useState(null);
+
+  useEffect(() => {
+    // Load user settings
+    const loadSettings = () => {
+      const stored = localStorage.getItem('userSettings');
+      if (stored) {
+        setUserSettings(JSON.parse(stored));
+      }
+    };
+
+    loadSettings();
+
+    // Listen for settings changes
+    window.addEventListener('userSettingsUpdated', loadSettings);
+    return () => window.removeEventListener('userSettingsUpdated', loadSettings);
+  }, []);
+
+
+  const getUserInitials = () => {
+    if (userSettings?.profile?.name) {
+      return userSettings.profile.name.split(' ').map(n => n[0]).join('');
+    }
+    return 'JD';
+  };
+
+
   return (
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
       <div className="px-4 sm:px-6 lg:px-8 py-4">
@@ -20,17 +49,24 @@ const Header = () => {
 
           {/* Right Section */}
           <div className="flex items-center space-x-4 ml-4">
-            <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors relative">
-              <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            <div className="relative">
+              <NotificationPanel />
+            </div>
 
             <ThemeToggle />
 
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                JD
-              </div>
+              {userSettings?.profile?.avatar ? (
+                <img
+                  src={userSettings.profile.avatar}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                  {getUserInitials()}
+                </div>
+              )}
             </div>
           </div>
         </div>
